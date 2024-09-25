@@ -1,0 +1,14 @@
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    uses: pulumi/publish-go-binary-action/.github/workflows/build-binaries.yml@v1
+    name: Build Go Binaries
+    with:
+      binary-name: ask
+      packages: github.com/andyantrim/ask
+      version: '1.0.0'
+      root-dir: provider
+      extra-package-files: README.md LICENCE
