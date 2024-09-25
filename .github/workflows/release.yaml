@@ -4,7 +4,7 @@ on:
 
 jobs:
   build:
-    uses: pulumi/publish-go-binary-action/.github/workflows/build-binaries.yml@v1
+    uses: .github/workflows/build-binaries.yml
     name: Build Go Binaries
     with:
       binary-name: ask
