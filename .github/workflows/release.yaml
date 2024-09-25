@@ -10,7 +10,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v2
       - name: Build Binaries
-        uses: ./github/workflows/build-binaries.yml
+        uses: ./github/workflows/
         with:
           binary-name: ask
           packages: github.com/andyantrim/ask
