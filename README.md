@@ -6,10 +6,12 @@ The `ask` program allows you to query different large language models (LLMs) dir
 ## Installation
 1. Copy the script to `/usr/local/bin`:
     ```sh
-    sudo cp ask /usr/local/bin/
+    sudo cp ask-<os>-<arch> /usr/local/bin/
     sudo chmod +x /usr/local/bin/ask
     ```
 If `/usr/local/bin` is not in your path, place it somewhere else!
+
+2. Or install with `go install github.com/andyantrim/ask`
 
 ## Usage
 The `ask` program can be used with the following syntax:
