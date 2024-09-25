@@ -4,11 +4,15 @@ on:
 
 jobs:
   build:
-    uses: .github/workflows/build-binaries.yml
+    runs-on: ubuntu-latest
     name: Build Go Binaries
-    with:
-      binary-name: ask
-      packages: github.com/andyantrim/ask
-      version: '1.0.0'
-      root-dir: provider
-      extra-package-files: README.md LICENCE
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+      - name: Build Binaries
+        uses: ./github/workflows/build-binaries.yml
+        with:
+          binary-name: ask
+          packages: github.com/andyantrim/ask
+          version: '1.0.0'
+          extra-package-files: README.md LICENCE
