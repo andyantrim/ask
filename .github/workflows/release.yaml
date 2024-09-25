@@ -5,14 +5,87 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    name: Build Go Binaries
+    name: Package binaries
+    outputs:
+      linux-amd64-filename: ${{ steps.package.outputs.linux-amd64-filename }}
+      linux-amd64-shasum: ${{ steps.checksum.outputs.linux-amd64-shasum }}
+      linux-arm64-filename: ${{ steps.package.outputs.linux-arm64-filename }}
+      linux-arm64-shasum: ${{ steps.checksum.outputs.linux-arm64-shasum }}
+      darwin-amd64-filename: ${{ steps.package.outputs.darwin-amd64-filename }}
+      darwin-amd64-shasum: ${{ steps.checksum.outputs.darwin-amd64-shasum }}
+      darwin-arm64-filename: ${{ steps.package.outputs.darwin-arm64-filename }}
+      darwin-arm64-shasum: ${{ steps.checksum.outputs.darwin-arm64-shasum }}
+      windows-amd64-filename: ${{ steps.package.outputs.windows-amd64-filename }}
+      windows-amd64-shasum: ${{ steps.checksum.outputs.windows-amd64-shasum }}
+    strategy:
+      matrix:
+        target:
+          - goos: linux
+            goarch: amd64
+          - goos: linux
+            goarch: arm64
+          - goos: darwin
+            goarch: amd64
+          - goos: darwin
+            goarch: arm64
+          - goos: windows
+            goarch: amd64
+    env:
+      BINARY_SUFFIX: ${{ matrix.target.goos == 'windows' && '.exe' || '' }}
+      TARGET: ${{ matrix.target.goos }}-${{ matrix.target.goarch }}
+      GZ_FILENAME: ask_v1.0.0-${{ matrix.target.goos }}-${{ matrix.target.goarch }}.tar.gz
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v2
-      - name: Build Binaries
-        uses: ./github/workflows/
+      - name: Checkout Repo
+        uses: actions/checkout@v4
         with:
-          binary-name: ask
-          packages: github.com/andyantrim/ask
-          version: '1.0.0'
-          extra-package-files: README.md LICENCE
+          submodules: true
+
+      - name: Build
+        env:
+          GOOS: ${{ matrix.target.goos }}
+          GOARCH: ${{ matrix.target.goarch }}
+        run: go build -o "${{ runner.temp }}/${{ env.TARGET }}/ask${{ env.BINARY_SUFFIX }}"
+
+      - name: Package
+        id: package
+        run: |
+          tar --gzip -cf "${{ runner.temp }}/${{ env.GZ_FILENAME }}" -C "${{ runner.temp }}/${{ env.TARGET }}" .
+          echo "${{ env.TARGET }}-filename="${{ env.GZ_FILENAME }}"" >> "$GITHUB_OUTPUT"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.GZ_FILENAME }}
+          path: ${{ runner.temp }}/${{ env.GZ_FILENAME }}
+
+      - name: Checksum
+        id: checksum
+        working-directory: ${{ runner.temp }}
+        run: |
+          shasum "${{ env.GZ_FILENAME }}"
+          echo -n "${{ env.TARGET }}-shasum=" >> "$GITHUB_OUTPUT" && \
+            shasum "${{ env.GZ_FILENAME }}" >> "$GITHUB_OUTPUT"
+
+  checksum:
+    runs-on: ubuntu-latest
+    name: Write checksums
+    needs: build
+    env:
+      CHECKSUMS_FILENAME: "ask_v1.0.0_checksums.txt"
+    steps:
+      - name: Write checksums
+        run: |
+          echo "${{ needs.build.outputs.linux-amd64-shasum }}" >> "${{ env.CHECKSUMS_FILENAME }}"
+          echo "${{ needs.build.outputs.linux-arm64-shasum }}" >> "${{ env.CHECKSUMS_FILENAME }}"
+          echo "${{ needs.build.outputs.darwin-amd64-shasum }}" >> "${{ env.CHECKSUMS_FILENAME }}"
+          echo "${{ needs.build.outputs.darwin-arm64-shasum }}" >> "${{ env.CHECKSUMS_FILENAME }}"
+          echo "${{ needs.build.outputs.windows-amd64-shasum }}" >> "${{ env.CHECKSUMS_FILENAME }}"
+
+      - name: Upload checksums file
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.CHECKSUMS_FILENAME }}
+          path: ${{ env.CHECKSUMS_FILENAME }}
+
+      - name: Output checksums filename
+        run: echo "checksums-filename=${{ env.CHECKSUMS_FILENAME }}" > "$GITHUB_OUTPUT"
