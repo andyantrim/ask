@@ -47,7 +47,7 @@ jobs:
         run: go build -o "${{ runner.temp }}/${{ env.TARGET }}/ask-{{matrix.target.goos}}-{{matrix.target.goarch}}${{ env.BINARY_SUFFIX }}"
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ask-${{matrix.target.goos}}-${{matrix.target.goarch}}${{ env.BINARY_SUFFIX }}
           path: ${{ runner.temp }}/${{ env.TARGET }}
@@ -76,7 +76,7 @@ jobs:
           echo "${{ needs.build.outputs.windows-amd64-shasum }}" >> "${{ env.CHECKSUMS_FILENAME }}"
 
       - name: Upload checksums file
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ env.CHECKSUMS_FILENAME }}
           path: ${{ env.CHECKSUMS_FILENAME }}
